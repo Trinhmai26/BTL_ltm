@@ -112,24 +112,35 @@ Trong kiến trúc này:
 
 </p>
 <p align="center">
-  <em>Hình 6: Giao diện chi tiết hpatj động</em>
+  <em>Hình 6: Giao diện chi tiết hoạt động</em>
           <p align="center">
-       <img src="https://github.com/user-attachments/assets/a7065392-d518-4919-80f6-e726b5b00b86" />
+     <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/be6bc595-471c-41bc-8130-c573879b7b7b" />
+
 </p>
 <p align="center">
-  <em>Hình 7: Giao diện Thông tin cá nhân </em>
+  <em>Hình 7: Giao diện thông báo </em>
             <p align="center">
-       <img  src="https://github.com/user-attachments/assets/d4eebd78-d1c0-4ed6-a429-7d5d1446a249" />
+##  3.1. giao diện User
+      <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/0b0b04b7-da61-44b0-bd60-90d04c61081f" />
+
 
 </p>
 <p align="center">
-  <em>Hình 7: Giao diện Lịch sử đăng nhập </em>
+  <em>Hình 8: Giao diện thông tin cá nhân  </em>
               <p align="center">
-       <img  rc="https://github.com/user-attachments/assets/3b3cc7f0-4361-46c7-b160-ab3b2fc21e0b" />
+       <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a7d03c87-750a-48fa-a5bb-2aac95897ba4" />
 
 </p>
 <p align="center">
-  <em>Hình 8: Giao diện hỗ trợ </em>
+  <em>Hình 9: Giao diện chỉnh sửa thông tin cá nhân </em>
+      <p align="center">
+    <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/3e62d41c-d590-4edb-9870-5fd3a7e6939a" />
+
+
+</p>
+<p align="center">
+  <em>Hình 9: Giao diện lịch sử đăng nhập </em>
+    
 ## ⚙️ 4. Các bước cài đặt
 
 
