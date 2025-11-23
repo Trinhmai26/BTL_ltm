@@ -90,15 +90,17 @@ Trong kiến trúc này:
 
 ##  3.1. giao diện Admin
 <p align="center">
-    <img width="524" height="730" alt="image" src="https://github.com/user-attachments/assets/5432c11f-ce73-4fbd-86f8-a92d6143260d" />
+    <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d539e9e0-1805-483e-a903-149cd448ed5a" />
+
 </p>
 <p align="center">
   <em>Hình 2: Giao diện Dashboard</em>
   <p align="center">
-<img  src="https://github.com/user-attachments/assets/8786d425-775b-4b0a-8ec8-7a0d6bc6081c" />  
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/2d573ca3-db32-4473-b572-8547864696cc" />
+
 </p>
 <p align="center">
-  <em>Hình 3: Giao diện User</em>
+  <em>Hình 3: Giao diện quản lý User</em>
    <p align="center">
        <img src="https://github.com/user-attachments/assets/ab47db01-6bea-4226-b79d-514d1e1a2d37" />
 </p>
