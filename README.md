@@ -86,7 +86,7 @@ Trong kiến trúc này:
 
 ##  3.1. giao diện Admin
 <p align="center">
-<img src="https://github.com/user-attachments/assets/532626c2-babf-47c5-9e3e-89c6ce62f2d3" />
+    <img width="524" height="730" alt="image" src="https://github.com/user-attachments/assets/5432c11f-ce73-4fbd-86f8-a92d6143260d" />
 </p>
 <p align="center">
   <em>Hình 2: Giao diện Dashboard</em>
