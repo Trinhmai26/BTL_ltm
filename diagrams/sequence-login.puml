@@ -1,0 +1,108 @@
+@startuml Sequence Diagram - User Login Flow
+
+actor User
+participant "Client\nApplication" as Client
+participant "Socket\nConnection" as Socket
+participant "Server" as Server
+participant "ClientHandler" as Handler
+participant "DatabaseManager" as DB
+database "MySQL\nDatabase" as MySQL
+
+== User Login Sequence ==
+
+User -> Client : Enter username/password
+activate Client
+
+Client -> Client : validateLoginFields()
+Client -> Client : Create LOGIN Message
+note right : Message(type="LOGIN", user=User)
+
+Client -> Socket : sendRequest(loginMessage)
+activate Socket
+
+Socket -> Server : TCP connection
+activate Server
+
+Server -> Handler : New ClientHandler thread
+activate Handler
+
+Handler -> Handler : processRequest(loginMessage)
+Handler -> DB : authenticate(username, password)
+activate DB
+
+DB -> MySQL : SELECT * FROM users WHERE username=? AND password=?
+activate MySQL
+MySQL --> DB : User record or null
+deactivate MySQL
+
+alt Authentication Success
+    DB --> Handler : User object
+    deactivate DB
+    
+    Handler -> DB : updateLastLogin(username)
+    activate DB
+    DB -> MySQL : UPDATE users SET last_login=NOW()
+    MySQL --> DB : Success
+    deactivate DB
+    
+    Handler -> DB : logLoginAttempt(username, true, ip, device)
+    activate DB
+    DB -> MySQL : INSERT INTO login_history
+    MySQL --> DB : Success
+    deactivate DB
+    
+    Handler -> Server : addActiveClient(username, handler)
+    Server -> Server : activeClients.put(username, handler)
+    
+    Handler -> Handler : Create success Message
+    note right : Message(success=true, user=User)
+    
+else Authentication Failed
+    DB --> Handler : null
+    deactivate DB
+    
+    Handler -> DB : logLoginAttempt(username, false, ip, device)
+    activate DB
+    DB -> MySQL : INSERT INTO login_history
+    MySQL --> DB : Success
+    deactivate DB
+    
+    Handler -> Handler : Create error Message
+    note right : Message(success=false, error="Invalid credentials")
+end
+
+Handler --> Socket : Return response Message
+deactivate Handler
+
+Socket --> Client : Response Message
+deactivate Socket
+
+alt Login Success
+    Client -> Client : currentUser = response.getUser()
+    Client -> Client : preloadAvatar(user.getAvatarUrl())
+    
+    Client -> Client : Show User/Admin Dashboard
+    note right : Switch to appropriate panel based on user.isAdmin()
+    
+    Client --> User : Display dashboard
+    
+else Login Failed
+    Client -> Client : Show error dialog
+    Client --> User : Display error message
+end
+
+deactivate Client
+
+== Real-time User Status Update ==
+
+loop Every 10 seconds (Admin Dashboard)
+    Client -> Socket : GET_ACTIVE_USERS request
+    Socket -> Handler : Process request
+    Handler -> Server : getActiveClientCount()
+    Server --> Handler : Active user count
+    Handler --> Socket : Response with online users
+    Socket --> Client : Update admin dashboard
+    Client -> Client : Refresh online users display
+end
+
+@enduml

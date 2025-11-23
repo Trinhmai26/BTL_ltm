@@ -1,0 +1,159 @@
+@startuml Sequence Diagram - User Registration
+
+actor User
+participant "Client\nApplication" as Client
+participant "Register\nForm" as RegForm
+participant "Socket" as Socket
+participant "ClientHandler" as Handler
+participant "DatabaseManager" as DB
+database "MySQL" as MySQL
+
+== User Registration Flow ==
+
+User -> Client : Click "Đăng ký" button
+activate Client
+
+Client -> Client : cardLayout.show(contentPanel, "REGISTER")
+Client -> RegForm : Display registration form
+activate RegForm
+
+User -> RegForm : Fill registration form
+note right
+Username, Full Name, Email, 
+Phone, Password, Confirm Password,
+Avatar URL (optional)
+end note
+
+User -> RegForm : Click "✨ Tạo tài khoản"
+
+RegForm -> RegForm : validateRegisterFields()
+note right
+- Username: not empty, min 3 chars, alphanumeric + underscore only
+- Password: not empty, min 6 chars
+- Confirm password: matches password  
+- Full name: not empty, valid format
+- Email: valid email format
+- Phone: valid phone format (optional)
+- Avatar URL: valid URL format (optional)
+end note
+
+alt Validation Failed
+    RegForm -> RegForm : Show validation error dialog
+    RegForm --> User : Display specific error message
+    note right : "Username phải có ít nhất 3 ký tự!", etc.
+else Validation Passed
+    RegForm -> RegForm : Create User object
+    RegForm -> RegForm : Create REGISTER Message
+    note right : Message(type="REGISTER", user=newUser)
+    
+    RegForm -> Client : sendRequest(registerMessage)
+    
+    Client -> Socket : Send REGISTER Message
+    activate Socket
+    
+    Socket -> Handler : TCP message
+    activate Handler
+    
+    Handler -> Handler : processRequest(REGISTER)
+    Handler -> DB : registerUser(user)
+    activate DB
+    
+    DB -> MySQL : Check if username exists
+    activate MySQL
+    DB -> MySQL : SELECT username FROM users WHERE username=?
+    MySQL --> DB : Existing username or null
+    
+    alt Username Already Exists
+        MySQL --> DB : Existing record
+        deactivate MySQL
+        DB --> Handler : false
+        deactivate DB
+        
+        Handler -> Handler : Create error Message
+        note right : Message(success=false, error="Username đã tồn tại")
+        
+    else Username Available
+        MySQL --> DB : null (username free)
+        deactivate MySQL
+        
+        DB -> MySQL : INSERT INTO users
+        activate MySQL
+        note right
+        INSERT INTO users (username, password, 
+        full_name, phone, email, avatar_url, 
+        is_admin, is_locked) VALUES (?, ?, ?, ?, ?, ?, false, false)
+        end note
+        
+        MySQL --> DB : Insert success
+        deactivate MySQL
+        
+        DB --> Handler : true
+        deactivate DB
+        
+        Handler -> Handler : Create success Message
+        note right : Message(success=true, content="Đăng ký thành công!")
+    end
+    
+    Handler --> Socket : Response Message
+    deactivate Handler
+    
+    Socket --> Client : Response
+    deactivate Socket
+    
+    alt Registration Success
+        Client -> Client : preloadAvatar(avatarUrl) // If avatar URL provided
+        note right : Cache avatar for future login
+        
+        Client -> RegForm : Show success dialog
+        RegForm -> RegForm : Clear all form fields
+        Client -> Client : cardLayout.show(contentPanel, "LOGIN")
+        RegForm --> User : "Đăng ký thành công!" + Switch to login
+        
+    else Registration Failed  
+        Client -> RegForm : Show error dialog
+        RegForm --> User : Display error message
+        note right : "Username đã tồn tại" or "Lỗi kết nối"
+    end
+end
+
+deactivate RegForm
+deactivate Client
+
+== Avatar Preview Feature ==
+
+User -> RegForm : Enter Avatar URL
+User -> RegForm : Click preview button "👁"
+activate RegForm
+
+RegForm -> RegForm : Create preview dialog
+RegForm -> RegForm : Load image in background thread
+note right
+new Thread(() -> {
+    URL imageUrl = new URL(url);
+    ImageIcon icon = new ImageIcon(imageUrl);
+    // Resize if needed
+    SwingUtilities.invokeLater(() -> {
+        imageLabel.setIcon(icon);
+    });
+})
+end note
+
+alt Image Load Success
+    RegForm --> User : Display image preview in dialog
+else Image Load Failed
+    RegForm --> User : Show "❌ Không thể tải ảnh" error
+end
+
+deactivate RegForm
+
+note over User, MySQL
+Password Security:
+Passwords should be hashed before storage
+Currently storing plain text (needs improvement)
+
+Avatar System:
+Avatar URLs are cached on client side
+Fallback to ui-avatars.com API if no URL provided
+end note
+
+@enduml

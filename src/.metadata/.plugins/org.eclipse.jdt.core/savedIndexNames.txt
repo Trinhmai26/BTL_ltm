@@ -1,0 +1,10 @@
+INDEX VERSION 1.134+D:\Bài báo\client-server-login\client-server-login\src\.metadata\.plugins\org.eclipse.jdt.core
+1982141053.index
+262142283.index
+1865797976.index
+558363074.index
+2461411560.index
+4030846507.index
+3765568166.index
+758615375.index
+1237459397.index

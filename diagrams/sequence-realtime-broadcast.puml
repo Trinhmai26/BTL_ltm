@@ -1,0 +1,164 @@
+@startuml Sequence Diagram - Real-time Communication & Broadcasting
+
+actor Admin
+actor "User A" as UserA  
+actor "User B" as UserB
+participant "Admin\nClient" as AdminClient
+participant "User A\nClient" as ClientA
+participant "User B\nClient" as ClientB
+participant "Server" as Server
+participant "Admin\nHandler" as AdminHandler
+participant "User A\nHandler" as HandlerA
+participant "User B\nHandler" as HandlerB
+participant "DatabaseManager" as DB
+
+== Users Connect and Login ==
+
+UserA -> ClientA : Login
+activate ClientA
+ClientA -> HandlerA : LOGIN request
+activate HandlerA
+HandlerA -> Server : addActiveClient("userA", handlerA)
+activate Server
+Server -> Server : activeClients.put("userA", handlerA)
+HandlerA --> ClientA : Login success
+deactivate HandlerA
+deactivate ClientA
+
+UserB -> ClientB : Login  
+activate ClientB
+ClientB -> HandlerB : LOGIN request
+activate HandlerB
+HandlerB -> Server : addActiveClient("userB", handlerB)
+Server -> Server : activeClients.put("userB", handlerB)
+HandlerB --> ClientB : Login success
+deactivate HandlerB
+deactivate ClientB
+
+Admin -> AdminClient : Login as admin
+activate AdminClient
+AdminClient -> AdminHandler : LOGIN request
+activate AdminHandler
+AdminHandler -> Server : addActiveClient("admin", adminHandler)
+Server -> Server : activeClients.put("admin", adminHandler)
+AdminHandler --> AdminClient : Login success
+deactivate AdminHandler
+
+== Real-time Active Users Monitoring ==
+
+loop Every 10 seconds
+    AdminClient -> AdminHandler : GET_ACTIVE_USERS request
+    activate AdminHandler
+    AdminHandler -> Server : getActiveClientCount()
+    Server --> AdminHandler : activeClients.size() = 3
+    AdminHandler --> AdminClient : Response with online count
+    deactivate AdminHandler
+    AdminClient -> AdminClient : Update dashboard "Online: 3 users"
+end
+
+== Admin Broadcasting Message ==
+
+Admin -> AdminClient : Open Broadcast Panel
+AdminClient -> AdminClient : Show AdminBroadcastPanel
+
+Admin -> AdminClient : Type message: "System maintenance in 5 minutes"
+Admin -> AdminClient : Click "📢 Gửi thông báo"
+
+AdminClient -> AdminHandler : BROADCAST request
+activate AdminHandler
+note right : Message(type="BROADCAST", content="System maintenance in 5 minutes")
+
+AdminHandler -> Server : broadcastToAllClients(message)
+Server -> Server : Iterate through activeClients
+
+par Broadcast to User A
+    Server -> HandlerA : sendMessage("📢 Thông báo từ Admin: System maintenance in 5 minutes")
+    activate HandlerA
+    HandlerA -> ClientA : Send broadcast message
+    activate ClientA
+    ClientA -> ClientA : Show popup notification
+    ClientA --> UserA : Display admin message
+    deactivate ClientA
+    deactivate HandlerA
+and Broadcast to User B  
+    Server -> HandlerB : sendMessage("📢 Thông báo từ Admin: System maintenance in 5 minutes")
+    activate HandlerB
+    HandlerB -> ClientB : Send broadcast message
+    activate ClientB
+    ClientB -> ClientB : Show popup notification  
+    ClientB --> UserB : Display admin message
+    deactivate ClientB
+    deactivate HandlerB
+and Don't send to Admin (sender)
+    note over Server, AdminHandler : Skip sending to message sender
+end
+
+AdminHandler --> AdminClient : Broadcast success
+deactivate AdminHandler
+
+AdminClient -> AdminClient : Log to broadcast panel
+AdminClient --> Admin : "✅ Đã gửi thông báo tới 2 người dùng"
+
+== User Logout Detection ==
+
+UserA -> ClientA : Click "Đăng xuất"
+activate ClientA
+
+ClientA -> HandlerA : LOGOUT request
+activate HandlerA
+
+HandlerA -> Server : removeActiveClient("userA")  
+Server -> Server : activeClients.remove("userA")
+HandlerA -> HandlerA : currentUser = null
+HandlerA --> ClientA : Logout success
+deactivate HandlerA
+
+ClientA -> ClientA : currentUser = null
+ClientA -> ClientA : cardLayout.show(contentPanel, "LOGIN")
+ClientA --> UserA : Return to login screen
+deactivate ClientA
+
+== Real-time Update After Logout ==
+
+note over AdminClient : Next auto-refresh cycle (10 seconds)
+
+AdminClient -> AdminHandler : GET_ACTIVE_USERS request
+activate AdminHandler
+AdminHandler -> Server : getActiveClientCount()
+Server --> AdminHandler : activeClients.size() = 2 (UserA removed)
+AdminHandler --> AdminClient : Response with updated count
+deactivate AdminHandler
+
+AdminClient -> AdminClient : Update dashboard "Online: 2 users"
+AdminClient --> Admin : Reflect real-time user status
+
+deactivate Server
+deactivate AdminClient
+
+== Connection Lost Handling ==
+
+note over ClientB : Network disconnection
+
+ClientB -> ClientB : Socket connection lost
+HandlerB -> HandlerB : IOException in run() loop
+HandlerB -> Server : removeActiveClient("userB") // Cleanup
+Server -> Server : activeClients.remove("userB")
+HandlerB -> HandlerB : Thread terminates
+
+note over AdminClient : Next auto-refresh shows UserB offline
+AdminClient -> AdminHandler : GET_ACTIVE_USERS request  
+AdminHandler -> Server : getActiveClientCount()
+Server --> AdminHandler : activeClients.size() = 1
+AdminHandler --> AdminClient : Updated count
+AdminClient -> AdminClient : Update dashboard "Online: 1 user"
+
+note over Admin, DB
+Real-time Features:
+- Active user tracking with Map<String, ClientHandler>
+- Automatic cleanup on disconnect/logout  
+- Broadcast messaging to all connected clients
+- Live dashboard updates every 10 seconds
+- Connection state monitoring
+end note
+
+@enduml

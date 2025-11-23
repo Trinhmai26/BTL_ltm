@@ -1,0 +1,163 @@
+@startuml Activity Diagram - User Authentication & Management
+
+|#LightBlue|User|
+start
+:Access Application;
+:Enter Username/Password;
+
+|#LightGreen|Client Application|
+:Validate Input Fields;
+if (Valid Input?) then (no)
+    :Show Validation Error;
+    stop
+else (yes)
+    :Create LOGIN Message;
+    :Send to Server;
+endif
+
+|#Orange|Server|
+:Receive LOGIN Request;
+:Create ClientHandler Thread;
+
+|#Pink|Database|
+if (User Exists?) then (no)
+    :Return Authentication Failed;
+else (yes)
+    if (Account Locked?) then (yes)
+        :Return Account Locked Error;
+    else (no)
+        if (Password Correct?) then (no)
+            :Log Failed Attempt;
+            :Return Authentication Failed;
+        else (yes)
+            :Update Last Login;
+            :Log Successful Login;
+            :Return User Object;
+        endif
+    endif
+endif
+
+|#Orange|Server|
+if (Authentication Success?) then (yes)
+    :Add to Active Clients;
+    :Send Success Response;
+else (no)
+    :Send Error Response;
+endif
+
+|#LightGreen|Client Application|
+if (Login Success?) then (yes)
+    :Store Current User;
+    :Preload Avatar;
+    if (User is Admin?) then (yes)
+        :Show Admin Dashboard;
+        
+        |#Yellow|Admin Dashboard|
+        fork
+            :Monitor Active Users;
+            :Auto-refresh every 10s;
+        fork again
+            :User Management Panel;
+            :CRUD Operations;
+        fork again  
+            :System Statistics;
+            :View Reports;
+        fork again
+            :Broadcast Messages;
+            :Send to All Users;
+        fork again
+            :Login History;
+            :Export/Clear Data;
+        end fork
+        
+    else (no)
+        :Show User Dashboard;
+        
+        |#LightCyan|User Dashboard|
+        fork
+            :View/Edit Profile;
+            :Update Personal Info;
+        fork again
+            :View Login History;
+            :Personal Activity Log;
+        fork again
+            :Receive Broadcasts;
+            :Admin Notifications;
+        end fork
+    endif
+else (no)
+    :Show Error Message;
+    :Return to Login Form;
+endif
+
+|#Orange|Server Operations|
+partition "Concurrent Operations" {
+    fork
+        :Handle Multiple Clients;
+        :Thread per Connection;
+    fork again
+        :Broadcast Management;
+        :Real-time Messaging;
+    fork again
+        :Session Management;
+        :Active User Tracking;
+    fork again
+        :Database Operations;
+        :CRUD + Logging;
+    end fork
+}
+
+|#Pink|Database Operations|
+partition "Data Management" {
+    :User Authentication;
+    :Profile Management;  
+    :Login History Tracking;
+    :System Statistics;
+    :Admin Operations;
+}
+
+note right of "Admin Dashboard"
+Admin Capabilities:
+- Edit any user's username
+- Grant/revoke admin privileges  
+- Lock/unlock user accounts
+- Delete user accounts
+- View system statistics
+- Broadcast messages
+- Monitor active users
+- Export login history
+end note
+
+note right of "User Dashboard"  
+User Capabilities:
+- Edit own profile (name, email, phone)
+- Change password
+- Update avatar URL
+- View personal login history
+- Export personal data
+- Receive admin broadcasts
+end note
+
+|#LightBlue|User|
+:Interact with Dashboard;
+if (Continue Session?) then (yes)
+    |#LightGreen|Client Application|
+    :Maintain Connection;
+    :Auto-refresh Data;
+    :Handle Real-time Updates;
+else (no)
+    :Logout Request;
+    
+    |#Orange|Server|
+    :Remove from Active Clients;
+    :Clean up Resources;
+    :Log Logout Event;
+    
+    |#LightGreen|Client Application|
+    :Clear User Session;
+    :Return to Login Screen;
+endif
+
+stop
+
+@enduml

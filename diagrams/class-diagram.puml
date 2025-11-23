@@ -1,0 +1,310 @@
+@startuml Class Diagram - Login System
+
+package "Common Models" {
+    class User {
+        - String username
+        - String password
+        - String fullName
+        - String phone
+        - String email
+        - boolean admin
+        - boolean locked
+        - boolean online
+        - String lastLogin
+        - String avatarUrl
+        --
+        + User()
+        + User(username, password, fullName, phone, email)
+        + getUsername() : String
+        + setUsername(username : String)
+        + getPassword() : String
+        + setPassword(password : String)
+        + getFullName() : String
+        + setFullName(fullName : String)
+        + getPhone() : String
+        + setPhone(phone : String)
+        + getEmail() : String
+        + setEmail(email : String)
+        + isAdmin() : boolean
+        + setAdmin(admin : boolean)
+        + isLocked() : boolean
+        + setLocked(locked : boolean)
+        + isOnline() : boolean
+        + setOnline(online : boolean)
+        + getLastLogin() : String
+        + setLastLogin(lastLogin : String)
+        + getAvatarUrl() : String
+        + setAvatarUrl(avatarUrl : String)
+    }
+
+    class Message {
+        - String type
+        - String content
+        - User user
+        - boolean success
+        - String error
+        --
+        + Message()
+        + Message(type : String, content : String)
+        + getType() : String
+        + setType(type : String)
+        + getContent() : String
+        + setContent(content : String)
+        + getUser() : User
+        + setUser(user : User)
+        + isSuccess() : boolean
+        + setSuccess(success : boolean)
+        + getError() : String
+        + setError(error : String)
+    }
+
+    class RequestType <<static>> {
+        + {static} LOGIN : String = "LOGIN"
+        + {static} REGISTER : String = "REGISTER"
+        + {static} GET_USER_INFO : String = "GET_USER_INFO"
+        + {static} UPDATE_USER : String = "UPDATE_USER"
+        + {static} GET_ALL_USERS : String = "GET_ALL_USERS"
+        + {static} DELETE_USER : String = "DELETE_USER"
+        + {static} LOCK_USER : String = "LOCK_USER"
+        + {static} UNLOCK_USER : String = "UNLOCK_USER"
+        + {static} SET_ADMIN : String = "SET_ADMIN"
+        + {static} UPDATE_USERNAME : String = "UPDATE_USERNAME"
+        + {static} GET_STATS : String = "GET_STATS"
+        + {static} GET_DETAILED_STATS : String = "GET_DETAILED_STATS"
+        + {static} LOGOUT : String = "LOGOUT"
+        + {static} GET_LOGIN_HISTORY : String = "GET_LOGIN_HISTORY"
+        + {static} DELETE_LOGIN_HISTORY : String = "DELETE_LOGIN_HISTORY"
+        + {static} BROADCAST : String = "BROADCAST"
+        + {static} GET_ACTIVE_USERS : String = "GET_ACTIVE_USERS"
+    }
+}
+
+package "Server Side" {
+    class Server {
+        - {static} int PORT = 12345
+        - ServerSocket serverSocket
+        - Map<String, ClientHandler> activeClients
+        - DatabaseManager dbManager
+        - boolean running
+        --
+        + Server()
+        + start() : void
+        + stop() : void
+        + addActiveClient(username : String, handler : ClientHandler) : void
+        + removeActiveClient(username : String) : void
+        + getActiveClientCount() : int
+        + getDbManager() : DatabaseManager
+        + broadcastToAllClients(message : String) : void
+        + isUserOnline(username : String) : boolean
+    }
+
+    class ClientHandler {
+        - Socket clientSocket
+        - ObjectInputStream in
+        - ObjectOutputStream out
+        - Server server
+        - String currentUser
+        --
+        + ClientHandler(socket : Socket, server : Server)
+        + run() : void
+        - processRequest(request : Message) : Message
+        - handleLogin(request : Message) : Message
+        - handleRegister(request : Message) : Message
+        - handleUpdateUser(request : Message) : Message
+        - handleGetAllUsers(request : Message) : Message
+        - handleDeleteUser(request : Message) : Message
+        - handleLockUser(request : Message) : Message
+        - handleUnlockUser(request : Message) : Message
+        - handleSetAdmin(request : Message) : Message
+        - handleUpdateUsername(request : Message) : Message
+        - handleGetStats() : Message
+        - handleGetDetailedStats() : Message
+        - handleGetLoginHistory(request : Message) : Message
+        - handleDeleteLoginHistory(request : Message) : Message
+        - handleBroadcast(request : Message) : Message
+        - handleGetActiveUsers(request : Message) : Message
+        - handleLogout() : Message
+        + sendMessage(message : String) : void
+        + disconnect() : void
+    }
+
+    class DatabaseManager {
+        - {static} String URL = "jdbc:mysql://localhost:3306/login_system"
+        - {static} String USERNAME = "root"
+        - {static} String PASSWORD = "123456"
+        - Connection connection
+        --
+        + DatabaseManager()
+        - createTables() : void
+        - createDefaultAdmin() : void
+        + authenticate(username : String, password : String) : User
+        + registerUser(user : User) : boolean
+        + updateUser(user : User) : boolean
+        + updateUsername(oldUsername : String, newUsername : String) : boolean
+        + getAllUsers() : List<User>
+        + deleteUser(username : String) : boolean
+        + lockUser(username : String) : boolean
+        + unlockUser(username : String) : boolean
+        + setAdminRole(username : String, isAdmin : boolean) : boolean
+        + getSystemStats() : String
+        + getDetailedStats() : String
+        + getLoginHistory(usernameOrAll : String) : List<String>
+        + deleteLoginHistory(username : String) : boolean
+        + logLoginAttempt(username : String, success : boolean, ipAddress : String, device : String) : void
+        + updateLastLogin(username : String) : void
+        + close() : void
+    }
+}
+
+package "Client Side" {
+    class Client {
+        - {static} String SERVER_HOST = "localhost"
+        - {static} int SERVER_PORT = 12345
+        - Socket socket
+        - ObjectOutputStream out
+        - ObjectInputStream in
+        - JFrame mainFrame
+        - CardLayout cardLayout
+        - JPanel contentPanel
+        - User currentUser
+        - Map<String, ImageIcon> avatarCache
+        --
+        + Client()
+        + main(args : String[]) : void
+        - connectToServer() : boolean
+        - sendRequest(request : Message) : Message
+        - createLoginPanel() : JPanel
+        - createRegisterPanel() : JPanel
+        - createUserPanel() : JPanel
+        - createAdminPanel() : JPanel
+        - loadSmallAvatar(url : String, size : int) : ImageIcon
+        - preloadAvatar(url : String) : void
+        - validateLoginFields(username : String, password : String) : boolean
+        - validateRegisterFields(...) : boolean
+        + disconnect() : void
+    }
+
+    abstract class UIPanel {
+        # JFrame parentFrame
+        # Function<Message, Message> requestSender
+        --
+        + UIPanel(parentFrame : JFrame, requestSender : Function)
+        # createModernButton(...) : JButton
+        # createModernTextField() : JTextField
+        # showValidationError(message : String) : void
+    }
+
+    class UserInfoPanel {
+        - User currentUser
+        - Map<String, ImageIcon> avatarCache
+        - JTextField nameField
+        - JTextField emailField
+        - JTextField phoneField
+        - JPasswordField passField
+        - JTextField avatarUrlField
+        - JButton editBtn
+        - JButton saveBtn
+        - JButton cancelBtn
+        --
+        + UserInfoPanel(currentUser : User, avatarCache : Map, requestSender : Function)
+        - saveUserData() : void
+        - loadAvatar(url : String) : void
+        - preloadAvatar(url : String) : void
+        - toggleEditMode(editable : boolean) : void
+    }
+
+    class AdminUserManagementPanel {
+        - DefaultTableModel model
+        - JTable table
+        - Timer autoRefreshTimer
+        --
+        + AdminUserManagementPanel(parentFrame : JFrame, requestSender : Function, gson : Gson)
+        - loadUsers() : void
+        - handleEditUser() : void
+        - handleDeleteUser() : void
+        - createModernCheckbox(text : String, selected : boolean) : JCheckBox
+    }
+
+    class AdminDashboardPanel {
+        - JLabel totalUsersLabel
+        - JLabel onlineUsersLabel
+        - JLabel adminUsersLabel
+        - JLabel lockedUsersLabel
+        - Timer refreshTimer
+        --
+        + AdminDashboardPanel(parentFrame : JFrame, requestSender : Function)
+        - loadStats() : void
+        - loadDetailedStats() : void
+        - refreshData() : void
+    }
+
+    class UserHistoryPanel {
+        - DefaultTableModel model
+        - JTable table
+        --
+        + UserHistoryPanel(parentFrame : JFrame, requestSender : Function, currentUser : User)
+        - loadHistory() : void
+        - exportToCSV() : void
+        - clearHistory() : void
+    }
+
+    class AdminHistoryPanel {
+        - DefaultTableModel model
+        - JTable table
+        --
+        + AdminHistoryPanel(parentFrame : JFrame, requestSender : Function)
+        - loadHistory() : void
+        - exportToCSV() : void
+        - clearHistory() : void
+    }
+
+    class AdminBroadcastPanel {
+        - JTextArea messageArea
+        - JTextArea logArea
+        - JButton sendButton
+        --
+        + AdminBroadcastPanel(parentFrame : JFrame, requestSender : Function)
+        - sendBroadcast() : void
+        - logMessage(message : String) : void
+    }
+}
+
+' Relationships
+Message --> User : contains
+ClientHandler --> Server : uses
+ClientHandler --> DatabaseManager : uses
+Server --> DatabaseManager : has
+Server --> ClientHandler : manages
+Client --> Message : creates/sends
+Client --> User : stores current
+UIPanel <|-- UserInfoPanel
+UIPanel <|-- AdminUserManagementPanel
+UIPanel <|-- AdminDashboardPanel
+UIPanel <|-- UserHistoryPanel
+UIPanel <|-- AdminHistoryPanel
+UIPanel <|-- AdminBroadcastPanel
+Client --> UIPanel : creates
+DatabaseManager --> User : persists
+ClientHandler --> Message : processes
+
+note top of Server
+Handles multiple concurrent clients
+Maintains active user sessions
+Provides real-time communication
+end note
+
+note top of DatabaseManager
+MySQL database integration
+User authentication & management
+Login history tracking
+System statistics
+end note
+
+note top of Client
+Swing GUI application
+Avatar caching system
+Real-time UI updates
+Form validation
+end note
+
+@enduml

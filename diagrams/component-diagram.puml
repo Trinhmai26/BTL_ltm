@@ -1,0 +1,101 @@
+@startuml Component Diagram - Login System
+
+!define RECTANGLE class
+
+package "Client Side" {
+    [Client Application] as Client
+    
+    package "UI Components" {
+        [Login/Register UI] as LoginUI
+        [User Dashboard] as UserDash
+        [Admin Dashboard] as AdminDash
+        [User Management Panel] as UserMgmt
+        [History Panel] as History
+        [Broadcast Panel] as Broadcast
+        [User Info Panel] as UserInfo
+    }
+    
+    package "Client Logic" {
+        [Request Handler] as ClientReq
+        [Avatar Cache] as AvatarCache
+        [UI Controller] as UIController
+    }
+}
+
+package "Server Side" {
+    [Server Application] as Server
+    [Client Handler] as ServerHandler
+    [Database Manager] as DBManager
+    [Active Clients Manager] as ActiveMgr
+}
+
+package "Database" {
+    database "MySQL Database" {
+        [users table] as UsersDB
+        [login_history table] as HistoryDB
+    }
+}
+
+package "Common Models" {
+    [User] as UserModel
+    [Message] as MessageModel
+    [RequestType] as ReqType
+}
+
+' Client UI relationships
+Client --> LoginUI
+Client --> UserDash
+Client --> AdminDash
+
+UserDash --> UserInfo
+UserDash --> History
+
+AdminDash --> UserMgmt
+AdminDash --> History
+AdminDash --> Broadcast
+
+' Client logic relationships
+LoginUI --> ClientReq
+UserDash --> ClientReq
+AdminDash --> ClientReq
+ClientReq --> UIController
+UIController --> AvatarCache
+
+' Server relationships
+Server --> ServerHandler
+ServerHandler --> DBManager
+Server --> ActiveMgr
+DBManager --> UsersDB
+DBManager --> HistoryDB
+
+' Common model usage
+ClientReq ..> UserModel
+ClientReq ..> MessageModel
+ClientReq ..> ReqType
+ServerHandler ..> UserModel
+ServerHandler ..> MessageModel
+ServerHandler ..> ReqType
+
+' Network communication
+ClientReq <--> ServerHandler : TCP Socket\n(JSON Messages)
+
+note right of Server
+  Multi-threaded server
+  Handles concurrent clients
+  Real-time user status tracking
+end note
+
+note left of Client
+  Swing-based GUI
+  Avatar caching system
+  Auto-refresh mechanisms
+end note
+
+note bottom of DBManager
+  MySQL connectivity
+  CRUD operations
+  User authentication
+  Login history tracking
+end note
+
+@enduml

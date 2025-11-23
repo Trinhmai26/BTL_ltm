@@ -1,0 +1,217 @@
+@startuml Sequence Diagram - Admin User Management
+
+actor Admin
+participant "Admin\nDashboard" as AdminUI
+participant "User Management\nPanel" as UserMgmt
+participant "Client\nApplication" as Client
+participant "Socket" as Socket
+participant "ClientHandler" as Handler
+participant "DatabaseManager" as DB
+database "MySQL" as MySQL
+
+== Load All Users ==
+
+Admin -> AdminUI : Click "Quản Lý Users" tab
+activate AdminUI
+
+AdminUI -> UserMgmt : Create AdminUserManagementPanel
+activate UserMgmt
+
+UserMgmt -> Client : sendRequest(GET_ALL_USERS)
+activate Client
+
+Client -> Socket : GET_ALL_USERS Message
+activate Socket
+
+Socket -> Handler : Process request
+activate Handler
+
+Handler -> DB : getAllUsers()
+activate DB
+
+DB -> MySQL : SELECT * FROM users
+activate MySQL
+MySQL --> DB : List<User>
+deactivate MySQL
+
+DB --> Handler : List<User>
+deactivate DB
+
+Handler --> Socket : Success Message with users list
+deactivate Handler
+
+Socket --> Client : Response Message
+deactivate Socket
+
+Client --> UserMgmt : List<User>
+deactivate Client
+
+UserMgmt -> UserMgmt : updateTableModel(users)
+UserMgmt --> AdminUI : Display users table
+deactivate UserMgmt
+deactivate AdminUI
+
+== Edit User Information ==
+
+Admin -> UserMgmt : Select user row and click "Chỉnh sửa"
+activate UserMgmt
+
+UserMgmt -> UserMgmt : handleEditUser()
+UserMgmt -> UserMgmt : Create edit dialog with user info
+
+Admin -> UserMgmt : Modify username, admin role, lock status
+Admin -> UserMgmt : Click "Lưu thay đổi"
+
+alt Username Changed
+    UserMgmt -> Client : sendRequest(UPDATE_USERNAME, "oldUsername,newUsername")
+    activate Client
+    
+    Client -> Socket : UPDATE_USERNAME Message
+    activate Socket
+    
+    Socket -> Handler : Process request
+    activate Handler
+    
+    Handler -> DB : updateUsername(oldUsername, newUsername)
+    activate DB
+    
+    DB -> MySQL : SELECT username FROM users WHERE username=newUsername
+    activate MySQL
+    MySQL --> DB : Check if exists
+    deactivate MySQL
+    
+    alt Username Available
+        DB -> MySQL : UPDATE users SET username=newUsername WHERE username=oldUsername
+        activate MySQL
+        MySQL --> DB : Success
+        deactivate MySQL
+        DB --> Handler : true
+    else Username Exists
+        DB --> Handler : false
+    end
+    deactivate DB
+    
+    Handler --> Socket : Response Message
+    deactivate Handler
+    Socket --> Client : Response
+    deactivate Socket
+    Client --> UserMgmt : Result
+    deactivate Client
+    
+    alt Username Update Failed
+        UserMgmt -> UserMgmt : Show error dialog
+        UserMgmt --> Admin : "Username đã tồn tại"
+        UserMgmt -> UserMgmt : Return (abort other updates)
+    end
+end
+
+UserMgmt -> Client : sendRequest(UPDATE_USER, updatedUser)
+activate Client
+
+Client -> Socket : UPDATE_USER Message
+activate Socket
+
+Socket -> Handler : Process request
+activate Handler
+
+Handler -> DB : updateUser(user)
+activate DB
+
+DB -> MySQL : UPDATE users SET full_name=?, phone=?, email=? WHERE username=?
+activate MySQL
+MySQL --> DB : Success
+deactivate MySQL
+
+DB --> Handler : true
+deactivate DB
+
+Handler --> Socket : Success Message
+deactivate Handler
+
+Socket --> Client : Response
+deactivate Socket
+
+Client --> UserMgmt : Success
+deactivate Client
+
+UserMgmt -> Client : sendRequest(SET_ADMIN, "username,true/false")
+activate Client
+
+Client -> Socket : SET_ADMIN Message
+Socket -> Handler : Process request
+Handler -> DB : setAdminRole(username, isAdmin)
+
+DB -> MySQL : UPDATE users SET is_admin=? WHERE username=?
+MySQL --> DB : Success
+
+DB --> Handler : true
+Handler --> Socket : Success Message
+Socket --> Client : Response
+Client --> UserMgmt : Success
+deactivate Client
+
+alt User Should Be Locked
+    UserMgmt -> Client : sendRequest(LOCK_USER, username)
+    Client -> Socket : LOCK_USER Message
+    Socket -> Handler : Process request
+    Handler -> DB : lockUser(username)
+    DB -> MySQL : UPDATE users SET is_locked=true WHERE username=?
+    MySQL --> DB : Success
+    DB --> Handler : true
+    Handler --> Socket : Success Message
+    Socket --> Client : Response
+    Client --> UserMgmt : Success
+else User Should Be Unlocked
+    UserMgmt -> Client : sendRequest(UNLOCK_USER, username)
+    Client -> Socket : UNLOCK_USER Message
+    Socket -> Handler : Process request
+    Handler -> DB : unlockUser(username)
+    DB -> MySQL : UPDATE users SET is_locked=false WHERE username=?
+    MySQL --> DB : Success
+    DB --> Handler : true
+    Handler --> Socket : Success Message
+    Socket --> Client : Response
+    Client --> UserMgmt : Success
+end
+
+UserMgmt -> UserMgmt : loadUsers() // Refresh table
+UserMgmt --> Admin : Show success message "✅ Cập nhật thông tin thành công!"
+
+deactivate UserMgmt
+
+== Delete User ==
+
+Admin -> UserMgmt : Select user and click "Xóa"
+activate UserMgmt
+
+UserMgmt -> UserMgmt : Show confirmation dialog
+Admin -> UserMgmt : Confirm deletion
+
+UserMgmt -> Client : sendRequest(DELETE_USER, username)
+activate Client
+
+Client -> Socket : DELETE_USER Message
+Socket -> Handler : Process request
+Handler -> DB : deleteUser(username)
+
+DB -> MySQL : DELETE FROM users WHERE username=?
+MySQL --> DB : Success
+
+DB --> Handler : true
+Handler --> Socket : Success Message
+Socket --> Client : Response
+Client --> UserMgmt : Success
+deactivate Client
+
+UserMgmt -> UserMgmt : loadUsers() // Refresh table
+UserMgmt --> Admin : Show success message "✅ Đã xóa người dùng thành công!"
+
+deactivate UserMgmt
+
+note over Admin, MySQL
+Auto-refresh every 10 seconds:
+UserMgmt sends GET_ALL_USERS 
+to keep table data current
+end note
+
+@enduml
