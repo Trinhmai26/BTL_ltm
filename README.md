@@ -94,23 +94,25 @@ Trong kiến trúc này:
 
 </p>
 <p align="center">
-  <em>Hình 2: Giao diện Dashboard</em>
+  <em>Hình 3: Giao diện Dashboard</em>
   <p align="center">
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/2d573ca3-db32-4473-b572-8547864696cc" />
 
 </p>
 <p align="center">
-  <em>Hình 3: Giao diện quản lý User</em>
+  <em>Hình 4: Giao diện quản lý User</em>
    <p align="center">
-       <img src="https://github.com/user-attachments/assets/ab47db01-6bea-4226-b79d-514d1e1a2d37" />
+       <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/ea215a57-c5fe-472a-aae9-534d15c5c6cd" />
+
 </p>
 <p align="center">
-  <em>Hình 4: Giao diện Login story</em>
+  <em>Hình 5: Giao diện lịch sử đăng nhập </em>
       <p align="center">
-       <img src="https://github.com/user-attachments/assets/77964eef-3a3e-426a-905c-b0fb24fd5604" />
+      <img width="858" height="613" alt="image" src="https://github.com/user-attachments/assets/5373c60d-368b-45ee-9b16-5e72253e143b" />
+
 </p>
 <p align="center">
-  <em>Hình 6: Giao diện Đăng kí</em>
+  <em>Hình 6: Giao diện chi tiết hpatj động</em>
           <p align="center">
        <img src="https://github.com/user-attachments/assets/a7065392-d518-4919-80f6-e726b5b00b86" />
 </p>
