@@ -77,12 +77,16 @@ Trong kiến trúc này:
 
 ## 🖼️ 3. Hình ảnh chức năng
 <p align="center">
- <img src="https://github.com/user-attachments/assets/393881c9-8b2c-4084-aaa4-b1c0d9e188b0" />
-
+    <img width="524" height="730" alt="image" src="https://github.com/user-attachments/assets/f93a2a07-cace-4e34-914c-6928d0bac685" />
 </p>
 
 <p align="center">
   <em>Hình 1: Giao diện Đăng nhập</em>
+         <p align="center">
+       <img width="496" height="911" alt="image" src="https://github.com/user-attachments/assets/a89e7a32-a6d7-4cfe-87e2-a224ce89eb1b" />
+</p>
+<p align="center">
+  <em>Hình 2: Giao diện Đăng kí</em>
 
 ##  3.1. giao diện Admin
 <p align="center">
@@ -100,11 +104,6 @@ Trong kiến trúc này:
 </p>
 <p align="center">
   <em>Hình 4: Giao diện Login story</em>
-       <p align="center">
-       <img src="https://github.com/user-attachments/assets/77964eef-3a3e-426a-905c-b0fb24fd5604" />
-</p>
-<p align="center">
-  <em>Hình 5: Giao diện Đăng kí</em>
       <p align="center">
        <img src="https://github.com/user-attachments/assets/77964eef-3a3e-426a-905c-b0fb24fd5604" />
 </p>
